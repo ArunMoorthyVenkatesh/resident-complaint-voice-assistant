@@ -1,0 +1,7 @@
+.venv*
+env
+env*
+prdsc-sg.pem
+car_manual.pdf
+google_credentials.json
+*.json

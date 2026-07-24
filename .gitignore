@@ -1,0 +1,25 @@
+# Secrets
+*.pem
+*.env
+.env
+.env.*
+backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+google_credentials.json
+
+# Python
+backend/env/
+backend/.venv*/
+__pycache__/
+*.pyc
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

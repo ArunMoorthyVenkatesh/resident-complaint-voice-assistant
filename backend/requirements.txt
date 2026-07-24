@@ -1,0 +1,24 @@
+# Web framework
+fastapi
+uvicorn[standard]
+websockets
+pydantic
+python-multipart
+
+# Environment
+python-dotenv
+
+# AI
+anthropic
+groq
+requests
+google-genai>=1.0.0
+
+# Database (DynamoDB)
+boto3
+
+# TTS
+edge-tts
+
+# Lambda ASGI adapter
+mangum
