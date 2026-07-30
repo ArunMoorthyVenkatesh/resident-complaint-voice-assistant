@@ -94,7 +94,7 @@ GEMINI_CONFIG = types.LiveConnectConfig(
 MODEL = "gemini-3.1-flash-live-preview"
 
 
-async def handle_gemini_ws(websocket: WebSocket):
+async def handle_gemini_ws(websocket: WebSocket, user_email: str | None = None):
     """
     Proxy WebSocket between browser and Gemini Live.
 
@@ -157,7 +157,7 @@ async def handle_gemini_ws(websocket: WebSocket):
                                 for fc in response.tool_call.function_calls:
                                     if fc.name == "save_complaint":
                                         args = dict(fc.args)
-                                        complaint_id = await _do_save(args)
+                                        complaint_id = await _do_save(args, user_email)
                                         await session.send_tool_response(
                                             function_responses=[
                                                 types.FunctionResponse(
@@ -193,10 +193,11 @@ async def handle_gemini_ws(websocket: WebSocket):
             pass
 
 
-async def _do_save(args: dict) -> str:
+async def _do_save(args: dict, user_email: str | None = None) -> str:
     try:
         data = {
             **args,
+            "email":      user_email or "",
             "created_at": datetime.now(SGT).strftime("%Y-%m-%d %H:%M:%S SGT"),
             "source":     "gemini-live-web",
         }

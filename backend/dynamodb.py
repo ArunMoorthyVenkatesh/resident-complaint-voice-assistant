@@ -54,6 +54,7 @@ def save_complaint(complaint_data: dict) -> str:
         "complaint_id":   complaint_id,
         "timestamp":      datetime.now(SGT).strftime("%Y-%m-%d %H:%M:%S SGT"),
         "name":           complaint_data.get("name", ""),
+        "email":          complaint_data.get("email", ""),
         "complaint_type": complaint_data.get("complaint_type", ""),
         "description":    complaint_data.get("description", ""),
         "location":       complaint_data.get("location", ""),
@@ -97,6 +98,18 @@ def get_all_complaints() -> list:
         return items
     return _with_reconnect(_scan)
 
+
+
+def get_complaints_by_email(email: str) -> list:
+    """Return complaints filed by one resident, identified by their account email."""
+    def _scan(t):
+        result = t.scan(FilterExpression=Attr("email").eq(email))
+        items = result.get("Items", [])
+        while "LastEvaluatedKey" in result:
+            result = t.scan(ExclusiveStartKey=result["LastEvaluatedKey"], FilterExpression=Attr("email").eq(email))
+            items.extend(result.get("Items", []))
+        return items
+    return _with_reconnect(_scan)
 
 
 def clear_all_complaints():

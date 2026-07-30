@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
 const API_KEY      = import.meta.env.VITE_API_KEY;
 const HEADERS      = { 'X-API-Key': API_KEY };
 
@@ -38,6 +38,7 @@ export default function ComplaintsDashboard() {
     'Complaint ID':   c.complaint_id   || c['Complaint ID']   || '',
     'Timestamp':      c.timestamp      || c['Timestamp']      || '',
     'Name':           c.name           || c['Name']           || '',
+    'Email':          c.email          || c['Email']          || '',
     'Complaint Type': c.complaint_type || c['Complaint Type'] || '',
     'Description':    c.description    || c['Description']    || '',
     'Location':       c.location       || c['Location']       || '',
@@ -108,6 +109,7 @@ export default function ComplaintsDashboard() {
     const matchSearch = !q
       || c['Complaint ID']?.toLowerCase().includes(q)
       || c.Name?.toLowerCase().includes(q)
+      || c.Email?.toLowerCase().includes(q)
       || c['Complaint Type']?.toLowerCase().includes(q)
       || c.Description?.toLowerCase().includes(q)
       || c.Location?.toLowerCase().includes(q);
@@ -151,7 +153,7 @@ export default function ComplaintsDashboard() {
         </button>
         {filtersOpen && (
           <div className="dash-controls">
-            <div className="dash-filters">
+            <div id="tour-filters" className="dash-filters">
               {statuses.map(s => (
                 <button
                   key={s}
@@ -182,9 +184,10 @@ export default function ComplaintsDashboard() {
                 title="To date"
               />
               <input
+                id="tour-search"
                 className="dash-search"
                 type="text"
-                placeholder="Search by name, type, ID, location…"
+                placeholder="Search by name, email, type, ID, location…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -198,7 +201,7 @@ export default function ComplaintsDashboard() {
 
       {/* Insights (cross-complaint pattern alerts) */}
       {alerts.length > 0 && (
-        <div className="dash-section">
+        <div id="tour-insights" className="dash-section">
           <button className="dash-section-title" onClick={() => setInsightsOpen(o => !o)}>
             <span className={`dash-chevron ${insightsOpen ? 'open' : ''}`}>▸</span>
             Insights
@@ -237,11 +240,12 @@ export default function ComplaintsDashboard() {
         ) : (
           <div className="dash-table-wrap">
             <table className="dash-table">
-              <thead>
+              <thead id="tour-columns">
                 <tr>
                   <th>Reference</th>
                   <th>Date & Time</th>
                   <th>Name</th>
+                  <th>Email</th>
                   <th>Type</th>
                   <th>Description</th>
                   <th>Location</th>
@@ -258,6 +262,7 @@ export default function ComplaintsDashboard() {
                       </td>
                       <td className="dash-date">{c.Timestamp || '—'}</td>
                       <td className="dash-name">{c.Name || '—'}</td>
+                      <td className="dash-name">{c.Email || '—'}</td>
                       <td>
                         <span className="complaint-type-tag">{c['Complaint Type'] || '—'}</span>
                       </td>

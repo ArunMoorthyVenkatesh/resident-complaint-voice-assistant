@@ -1,15 +1,35 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import MyComplaints from './components/MyComplaints.jsx';
+import Walkthrough from './components/Walkthrough.jsx';
+import { useTour } from './useTour.js';
 import './styles.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+const USER_TOUR_STEPS = [
+  { selector: '#tour-call-btn', title: 'Start a complaint call', body: 'Tap this button to speak with Maya and report a building issue by voice.' },
+  { selector: '.cs-account', title: 'Your account', body: 'This shows the email you\'re logged in with — every complaint you file is tied to this account.' },
+  { selector: '#tour-my-complaints', title: 'My Complaints', body: 'View every complaint you\'ve submitted and check its status here.' },
+  { selector: '#tour-logout', title: 'Log out', body: 'Tap here whenever you want to sign out of your account.' },
+];
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
 const GEMINI_WS_URL = API_BASE_URL.replace(/^https?/, API_BASE_URL.startsWith('https') ? 'wss' : 'ws') + '/gemini-ws';
 const API_KEY = import.meta.env.VITE_API_KEY;
+
+const getAuth = () => JSON.parse(localStorage.getItem('buildcare_auth') || 'null');
+const getAuthToken = () => getAuth()?.token || '';
 
 const uid = () => 'session-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
 
 const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
 export default function App() {
+  const navigate = useNavigate();
+  const logout = () => {
+    localStorage.removeItem('buildcare_auth');
+    navigate('/', { replace: true });
+  };
+
   const [convActive,   setConvActive]   = useState(false);
   const [harrySpeaking,setHarrySpeaking]= useState(false);
   const [recording,    setRecording]    = useState(false);
@@ -17,6 +37,8 @@ export default function App() {
   const [summary,      setSummary]      = useState(null);
   const [collected,    setCollected]    = useState({});
   const [callSecs,     setCallSecs]     = useState(0);
+  const [showMyComplaints, setShowMyComplaints] = useState(false);
+  const [tourOpen, setTourOpen, closeTour] = useTour('user');
   const [clockTime,    setClockTime]    = useState(() =>
     new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   );
@@ -124,7 +146,7 @@ export default function App() {
 
     // Open WebSocket immediately — this kicks off Gemini session init on the backend
     // while mic permission + AudioWorklet load happen in parallel below
-    const ws = new WebSocket(`${GEMINI_WS_URL}?api_key=${API_KEY}`);
+    const ws = new WebSocket(`${GEMINI_WS_URL}?api_key=${API_KEY}&token=${getAuthToken()}`);
     ws.binaryType = 'arraybuffer';
     geminiWsRef.current = ws;
 
@@ -258,17 +280,49 @@ export default function App() {
 
   return (
     <div className="call-screen">
+      <Walkthrough steps={USER_TOUR_STEPS} open={tourOpen} onClose={closeTour} />
 
       {/* Status bar */}
       <div className="cs-statusbar">
         <span className="cs-clock">{clockTime}</span>
+        <div className="cs-statusbar-actions">
+          <button
+            className="cs-log-btn"
+            style={{ fontSize: 15, fontWeight: 700 }}
+            onClick={() => setTourOpen(true)}
+            aria-label="Help"
+          >
+            ?
+          </button>
+          <button
+            id="tour-my-complaints"
+            className="cs-log-btn"
+            onClick={() => setShowMyComplaints((v) => !v)}
+            aria-label="My Complaints"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M4 4h16v16H4z" />
+              <path d="M8 9h8M8 13h8M8 17h4" />
+            </svg>
+          </button>
+          <button id="tour-logout" className="cs-log-btn" onClick={logout} aria-label="Log out">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {showMyComplaints && <MyComplaints onClose={() => setShowMyComplaints(false)} />}
 
       {/* Caller identity */}
       <div className="cs-identity">
         <div className="cs-company">STE BuildCare</div>
         <div className="cs-name">Maya</div>
         <div className="cs-subtitle">Building Complaint Assistant</div>
+        <div className="cs-account">{getAuth()?.email}</div>
         {convActive && <div className="cs-timer">{fmt(callSecs)}</div>}
         {!convActive && !summary && <div className="cs-idle-hint">Tap to start</div>}
         {!convActive && summary && (
@@ -331,7 +385,7 @@ export default function App() {
             </button>
           </>
         ) : (
-          <button className="cs-call-btn" onClick={startConversation}>
+          <button id="tour-call-btn" className="cs-call-btn" onClick={startConversation}>
             <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.89 11a19.79 19.79 0 01-3.07-8.67A2 2 0 012.8 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l.91-.91a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 15.42z"/></svg>
           </button>
         )}

@@ -19,7 +19,8 @@ html, body, #root {
   flex-direction: column;
   align-items: center;
   background: radial-gradient(ellipse at 50% 0%, #1a1040 0%, #0a0a12 70%);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Ambient background glow */
@@ -42,6 +43,11 @@ html, body, #root {
   padding: 14px 22px 0;
   position: relative;
   z-index: 2;
+}
+
+.cs-statusbar-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .cs-clock {
@@ -106,6 +112,13 @@ html, body, #root {
   color: rgba(255,255,255,0.38);
   font-weight: 400;
   margin-top: 2px;
+}
+
+.cs-account {
+  font-size: 12px;
+  color: rgba(255,255,255,0.28);
+  font-weight: 400;
+  margin-top: 4px;
 }
 
 .cs-timer {
@@ -352,16 +365,14 @@ html, body, #root {
 .log-topbar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
   padding: 14px 16px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
-  position: relative;
   flex-shrink: 0;
 }
 
 .log-back {
-  position: absolute;
-  left: 16px;
+  flex-shrink: 0;
   background: none;
   border: none;
   font-size: 18px;
@@ -374,7 +385,61 @@ html, body, #root {
 }
 .log-back:hover { background: rgba(167,139,250,0.1); }
 
+.log-account-group {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.log-account {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-logout {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a78bfa;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.log-logout:hover { background: rgba(167,139,250,0.1); }
+
+.log-help {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.log-help:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
 .log-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
   font-size: 16px;
   font-weight: 600;
   color: #fff;
@@ -724,3 +789,420 @@ html, body, #root {
 }
 .status-select:disabled { opacity: 0.5; cursor: default; }
 .status-select option { background: #1a1a24; color: #fff; }
+
+/* ─── Design system tokens (HydroLeap spec) ──────────────────────── */
+:root {
+  --color-primary: #1e293b;
+  --color-secondary: #334155;
+  --color-cta: #22c55e;
+  --color-cta-hover: #1ea34e;
+  --color-background: #0f172a;
+  --color-text: #f8fafc;
+  --color-text-dim: rgba(248, 250, 252, 0.64);
+  --color-text-faint: rgba(248, 250, 252, 0.42);
+  --color-error: #ef4444;
+  --color-border: rgba(248, 250, 252, 0.12);
+
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+}
+
+.noir-backdrop {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: var(--color-background);
+  font-family: var(--font-body);
+  color: var(--color-text);
+}
+
+/* ─── Splash ──────────────────────────────────────────────────────── */
+.splash-screen { gap: var(--space-sm); }
+
+.splash-mark {
+  display: flex;
+  animation: splash-fade-in 0.4s ease-out;
+}
+
+.splash-letter {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  white-space: pre;
+}
+
+.splash-tagline {
+  font-size: 14px;
+  color: var(--color-text-dim);
+  animation: splash-fade-in 0.4s ease-out 0.1s both;
+}
+
+.splash-rule {
+  width: 32px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-cta);
+  margin: var(--space-xs) 0;
+  animation: splash-fade-in 0.4s ease-out 0.05s both;
+}
+
+@keyframes splash-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Auth (login / signup) ──────────────────────────────────────── */
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-2xl) var(--space-xl);
+  border-radius: 12px;
+  background: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-cta);
+  text-align: center;
+}
+
+.auth-title {
+  margin-top: var(--space-xs);
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+.auth-subtitle {
+  margin-top: var(--space-sm);
+  font-size: 14px;
+  color: var(--color-text-dim);
+  text-align: center;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-xl);
+  padding: var(--space-xs);
+  border-radius: 8px;
+  background: var(--color-background);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: var(--space-sm) 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+.auth-tab--active {
+  background: var(--color-secondary);
+  color: var(--color-text);
+}
+
+/* Segmented role selector -- distinct from tabs (border style, not filled) */
+.auth-role-group {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.auth-role-option {
+  flex: 1;
+  padding: var(--space-sm) 0;
+  border-radius: 8px;
+  border: 2px solid var(--color-secondary);
+  background: transparent;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.auth-role-option--active {
+  border-color: var(--color-cta);
+  color: var(--color-cta);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+}
+
+.auth-field { display: flex; flex-direction: column; gap: var(--space-xs); }
+
+.auth-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-dim);
+}
+
+.auth-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-secondary);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--color-cta);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.auth-input::placeholder { color: var(--color-text-faint); }
+
+.auth-error {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-error);
+}
+
+.auth-pending {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-cta);
+}
+
+.auth-submit {
+  margin-top: var(--space-xs);
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-cta);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: var(--color-cta-hover);
+  transform: translateY(-1px);
+}
+.auth-submit:focus-visible { outline: 2px solid var(--color-cta); outline-offset: 2px; }
+.auth-submit:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+/* ─── Password strength meter ────────────────────────────────────── */
+.pw-strength {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.pw-strength-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-secondary);
+  transition: background 200ms ease;
+}
+
+.pw-strength-bar--filled.pw-weak   { background: var(--color-error); }
+.pw-strength-bar--filled.pw-medium { background: #f59e0b; }
+.pw-strength-bar--filled.pw-strong { background: var(--color-cta); }
+
+.pw-strength-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+}
+
+.pw-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.pw-rule {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px var(--space-sm);
+  border-radius: 6px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-faint);
+  transition: all 200ms ease;
+}
+
+.pw-rule--met {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: var(--color-cta);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-mark, .splash-tagline, .splash-rule { animation: none; }
+  .auth-submit:hover:not(:disabled) { transform: none; }
+}
+
+.mc-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: #0f0f18;
+}
+
+/* ─── Walkthrough (first-time guided tour) ───────────────────────── */
+.wt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.wt-spotlight {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(10, 10, 16, 0.82);
+  border: 2px solid #22c55e;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+.wt-tooltip {
+  position: fixed;
+  width: min(280px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: #1e293b;
+  border: 1px solid rgba(248, 250, 252, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+  transition: top 0.25s ease, left 0.25s ease;
+}
+
+.wt-step-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #22c55e;
+  margin-bottom: 6px;
+}
+
+.wt-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 4px;
+}
+
+.wt-body {
+  font-size: 13px;
+  color: rgba(248, 250, 252, 0.65);
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+.wt-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wt-skip {
+  background: none;
+  border: none;
+  color: rgba(248, 250, 252, 0.5);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wt-skip:hover { color: #f8fafc; }
+
+.wt-next {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #22c55e;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.wt-next:hover { background: #1ea34e; }
+
+/* ─── Responsive ──────────────────────────────────────────────────── */
+
+/* Narrow phones */
+@media (max-width: 400px) {
+  .cs-controls { gap: 24px; }
+  .cs-call-btn, .cs-end-btn { width: 68px; height: 68px; }
+  .cs-util-btn { width: 52px; height: 52px; }
+  .cs-name { font-size: 32px; }
+  .auth-card { padding: var(--space-xl) var(--space-lg); }
+  .auth-title { font-size: 22px; }
+  .log-account { display: none; }
+  .splash-letter { font-size: 26px; }
+}
+
+/* Short viewports (landscape phones, small laptops in split view) */
+@media (max-height: 560px) {
+  .cs-identity { gap: 2px; padding: 0 20px; }
+  .cs-wave { margin: 8px 0 4px; height: 40px; }
+  .cs-controls { padding: 8px 0 max(env(safe-area-inset-bottom, 0px), 16px); gap: 24px; }
+  .cs-call-btn, .cs-end-btn { width: 60px; height: 60px; }
+  .cs-util-btn { width: 46px; height: 46px; }
+  .auth-card { padding: var(--space-lg); }
+}
+
+/* Tablets and up: keep content from stretching too wide/thin */
+@media (min-width: 700px) {
+  .cs-identity { max-width: 480px; }
+  .log-content { padding-left: max(0px, calc((100% - 1100px) / 2)); padding-right: max(0px, calc((100% - 1100px) / 2)); }
+}
+
+/* Fluid dashboard table on small screens */
+@media (max-width: 640px) {
+  .dash-table { font-size: 12px; }
+  .dash-table th, .dash-table td { padding: 8px 10px; }
+  .dash-search { max-width: none; }
+}
+
+

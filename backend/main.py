@@ -18,12 +18,13 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
 
 import logging
-from dynamodb import init_table, get_all_complaints, clear_all_complaints, update_status, VALID_STATUSES
+from dynamodb import init_table, get_all_complaints, get_complaints_by_email, clear_all_complaints, update_status, VALID_STATUSES
 from patterns import detect_patterns
 from gemini_live import handle_gemini_ws
+from auth import signup, login, verify_token, get_tour_status, mark_tour_seen, init_users_table, AuthError
 
-import asyncio
 from fastapi import FastAPI, HTTPException, Request, WebSocket, Body
+from pydantic import BaseModel
 from botocore.exceptions import ClientError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,11 +44,20 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Building Complaint AI API", version="2.0.0")
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    # Without this, an unhandled exception skips CORSMiddleware entirely and the
+    # browser reports a confusing "blocked by CORS" error instead of the real 500.
+    logger.error(f"Unhandled exception on {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(status_code=500, content={"error": "INTERNAL_ERROR", "message": "Something went wrong."})
+
+
 @app.middleware("http")
 async def verify_api_key(request: Request, call_next):
     if request.method == "OPTIONS" or \
-       request.url.path in ["/", "/health", "/docs", "/redoc", "/openapi.json"] or \
-       request.url.path.startswith("/ws"):
+       request.url.path in ["/", "/health", "/docs", "/redoc", "/openapi.json", "/my-complaints"] or \
+       request.url.path.startswith("/ws") or \
+       request.url.path.startswith("/auth"):
         return await call_next(request)
 
     api_key = request.headers.get("X-API-Key") or request.headers.get("Authorization", "")
@@ -66,6 +76,7 @@ async def verify_api_key(request: Request, call_next):
 @app.on_event("startup")
 async def startup_event():
     init_table()
+    init_users_table()
 
 
 @app.get("/health")
@@ -97,13 +108,87 @@ app.add_middleware(
 )
 
 
+# --- Auth ---
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+    role: str = "user"
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class TourSeenRequest(BaseModel):
+    tour: str
+
+
+def _bearer_token(request: Request) -> str:
+    authz = request.headers.get("Authorization", "")
+    return authz[7:] if authz.startswith("Bearer ") else authz
+
+
+@app.post("/auth/signup")
+async def auth_signup(body: SignupRequest):
+    try:
+        return signup(body.email, body.password, body.role)
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/auth/login")
+async def auth_login(body: LoginRequest):
+    try:
+        return login(body.email, body.password)
+    except AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+
+@app.get("/auth/me")
+async def auth_me(request: Request):
+    try:
+        identity = verify_token(_bearer_token(request))
+        return {**identity, **get_tour_status(identity["email"])}
+    except AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+
+@app.post("/auth/tour-seen")
+async def auth_tour_seen(body: TourSeenRequest, request: Request):
+    try:
+        email = verify_token(_bearer_token(request))["email"]
+        return mark_tour_seen(email, body.tour)
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 # --- Gemini Live WebSocket ---
 @app.websocket("/gemini-ws")
-async def gemini_websocket(websocket: WebSocket, api_key: str = ""):
+async def gemini_websocket(websocket: WebSocket, api_key: str = "", token: str = ""):
     if not api_key or api_key != API_KEY:
         await websocket.close(code=4001)
         return
-    await handle_gemini_ws(websocket)
+    try:
+        user_email = verify_token(token)["email"]
+    except AuthError:
+        user_email = None
+    await handle_gemini_ws(websocket, user_email)
+
+
+@app.get("/my-complaints")
+async def my_complaints(request: Request):
+    """Complaints filed by the logged-in resident, identified by their JWT -- not
+    gated by the shared X-API-Key since /auth paths (and this) are exempted above."""
+    try:
+        email = verify_token(_bearer_token(request))["email"]
+    except AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    try:
+        return {"complaints": get_complaints_by_email(email)}
+    except Exception as e:
+        logger.error(f"Failed to fetch complaints for {email}: {e}")
+        return {"complaints": [], "warning": "DynamoDB not configured."}
 
 
 # --- Complaints endpoints ---

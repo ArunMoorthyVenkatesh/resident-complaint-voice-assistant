@@ -13,5 +13,9 @@ google-genai>=1.0.0
 # Database (DynamoDB)
 boto3
 
+# Auth
+bcrypt
+pyjwt
+
 # Lambda ASGI adapter
 mangum
